@@ -1,18 +1,21 @@
 
 # LevelUp: Script de Retos Simples.
-# Version: v1.1.3
+# Version: v1.1.4
 # Python 3
 # Windows 
 
 import pyminizip	# Instalar: python -m pip install pyminizip
+import threading
 import zipfile
+import psutil		# Instalar: python -m pip install psutil
 import base64
 import random
 import string
+import time
 import sys
 import os
 
-version = 'v1.1.3'
+version = 'v1.1.4'
 
 #=======================================================================
 #=======================================================================
@@ -77,6 +80,48 @@ def create_zip(name_zip, name_txt):
 	pyminizip.compress(name_txt, None, name_zip, CNA, 0)
 
 #=======================================================================
+def set_procs():
+	
+	global proc
+	
+	procs = cmd2('tasklist /FI "IMAGENAME eq cmd.exe" /FI "STATUS eq running" /v')
+	procs = procs.split('\n')
+	# ~ print(procs)
+	
+	for p in procs:
+		if 'C:\Windows\system32\cmd.exe' in p:
+			proc = int(p.split()[1])
+			break
+
+def proc_lvl3(h_code):
+	
+	while not kill_lvl3:
+		temp = ''
+		procs = cmd2('tasklist /FI "IMAGENAME eq cmd.exe" /FI "STATUS eq running" /v')
+		procs = procs.split('\n')
+		# ~ print(procs)
+		for p in procs:
+			if p == '': continue
+			p = p.split()[1]
+			# ~ print([p])
+			if p == str(proc):
+				temp = int(p)
+				break
+		
+		# ~ print(False if not temp == proc else True, temp, proc)
+		
+		if not temp == proc:
+			
+			comandos  = 'start cmd /k '
+			comandos += '"doskey cls = echo "Escribe el comando KEY o DOSKEY /MACROS" & '
+			comandos += 'doskey key = echo "Reporta tu Codigo: {} - Creada con DOSKEY, '.format(h_code)
+			comandos += 'ver comandos creados con: DOSKEY /MACROS" & cls & title {} & '.format(CNA)
+			comandos += 'echo. & echo. "Encuentra El Código Usando Comandos Aquí, Sin Salir de la Ruta Actual...""'
+			cmd(comandos)
+			
+			set_procs()
+		
+		time.sleep(1)
 
 def print_text(code, nivel, extras=''):
 	cont = 0
@@ -145,6 +190,12 @@ def explicacion(nivel):
 	entre comillas dobles de la siguiente forma:
 	
 		notepad "archivo 1.txt:nombre.txt"
+	
+	Puedes usar TYPE nombre.txt para leer el contenido del archivo 
+	desde consola, pero debes agregar comillas dobles porque el nombre
+	contiene un espacio:
+	
+		TYPE "prueba 1.txt"
 	
 	====================================================================
 	
@@ -238,10 +289,47 @@ def explicacion(nivel):
 	
 	'''
 	
+	nivel_5 = '''\
+	
+	Nivel 5: Lock Mode - Investigación ==================================
+	
+	Esta clave CLSID permite bloquear carpetas.
+	
+	Ejemplo, crear una carpeta con el nombre:
+	
+		'LockMode.{2559a1f2-21d7-11d4-bdaf-00c04f60b9f0}'
+	
+	La carpeta cambia su imagen, esta carpeta bloquea el acceso a los 
+	archivos dentro de ella, si se elimina se borrara su contenido.
+	
+	El nombre de la carpeta antes del punto en realidad no importa,
+	lo que si importa es la clave CLSID que se encuentra depues del
+	punto.
+	
+	La forma de poder acceder dentro es renombrandola o accediendo
+	desde la consola de comandos usando:
+	
+		CD LockMode.{2559a1f2-21d7-11d4-bdaf-00c04f60b9f0}
+	
+	Puedes escribir CD luego poner un espacio y la primer letra,
+	para despues presionar TAB y autocompletar el nombre de archivo
+	o carpeta que quieras.
+	
+	Una vez dentro de la ruta, puedes usar TYPE nombre.txt para
+	leer el contenido del archivo en consola, pero debes agregar
+	comillas dobles porque el nombre contiene un espacio:
+	
+		TYPE "prueba 5.txt"
+	
+	====================================================================
+	
+	'''
+	
 	if   nivel == 1: explic = nivel_1
 	elif nivel == 2: explic = nivel_2
 	elif nivel == 3: explic = nivel_3
 	elif nivel == 4: explic = nivel_4
+	elif nivel == 5: explic = nivel_5
 	
 	print(explic)
 
@@ -259,6 +347,8 @@ del_file = lambda name: os.remove(name)
 #=======================================================================
 #=======================================================================
 #=======================================================================
+
+
 
 def prueba_1():
 	
@@ -347,18 +437,27 @@ def prueba_2():
 
 def prueba_3():
 	
-	global s, CNA
+	global s, CNA, kill_lvl3
 	
-	h_code = gen_code(4, 2)
+	h_code = gen_code(3, 2)
 	
 	comandos  = 'start cmd /k '
 	comandos += '"doskey cls = echo "Escribe el comando KEY o DOSKEY /MACROS" & '
 	comandos += 'doskey key = echo "Reporta tu Codigo: {} - Creada con DOSKEY, '.format(h_code)
-	comandos += 'ver comandos creados con: DOSKEY /MACROS" & cls &'
-	comandos += 'echo. & echo. "Encuentra El Código Usando Comandos Aquí, Sin Salir de la Carpeta...""'
+	comandos += 'ver comandos creados con: DOSKEY /MACROS" & cls & title {} & '.format(CNA)
+	comandos += 'echo. & echo. "Encuentra El Código Usando Comandos Aquí, Sin Salir de la Ruta Actual...""'
 	cmd(comandos)
 	
+	set_procs()
+	
+	PRO = threading.Thread(target=proc_lvl3, args=[h_code])
+	# ~ PRO.setName('RunningProc')
+	PRO.start()
+	
 	u_code = print_text(code=h_code, nivel=3)
+	
+	kill_lvl3 = True
+	cmd('TaskKill /PID {}'.format(proc))
 	
 	cmd('cls')
 	print('\n\t Nivel 3. Código Usado: {}\t<-- CORRECTO!'.format(u_code))
@@ -399,34 +498,87 @@ def prueba_4():
 	CNA = u_code
 
 
+def prueba_5():
+	
+	global s, NCA
+	
+	h_code = gen_code(4, 3)
+	
+	if not os.path.exists('LockMode.{2559a1f2-21d7-11d4-bdaf-00c04f60b9f0}\\'):
+		cmd('mkdir LockMode.{2559a1f2-21d7-11d4-bdaf-00c04f60b9f0}')
+	
+	with open('LockMode.{2559a1f2-21d7-11d4-bdaf-00c04f60b9f0}\prueba 5.txt', 'w') as f:
+		f.write('\n Muy Bien!')
+		f.write('\n Nivel 5 Completado.')
+		f.write('\n\n\t Reporta tu Código: {}'.format(h_code))
+		f.close()
+	
+	u_code = print_text(code=h_code, nivel=5)
+	
+	cmd('cls')
+	print('\n\t Nivel 5. Código Usado: {}\t<-- CORRECTO!'.format(u_code))
+	print('\n\t Excelente!')
+	print('\n\t Obtienes +1 HxK!')
+	cmd('Pause > Nul && cls')
+	
+	explicacion(5)
+	
+	cmd('Pause > Nul && cls')
+	
+	s += '\n\t Nivel 5. Código Usado: {}'.format(u_code)
+	CNA = u_code
+
+
 
 #=======================================================================
 #=======================================================================
 #=======================================================================
+
+# Habilitar 'Modo Dios': 'GodMode.{ED7BA470-8E54-465E-825C-99712043E01C}'
+# Video.MPP y Imagen.TPG para ocultar. https://norfipc.com/articulos/como-ocultar-archivos-carpetas-windows.html
+
+# Listado secreto de aplicaciones: Win + R y Shell:AppsFolder
+# ~ Win + Flecha izquierda/derecha + arriba/abajo: Fijar la ventana en un lateral
+# ~ Alt + Tab: Cambiar entre ventanas recientes
+# ~ Win + Tab: Vista de tareas, se ven todas las ventanas abiertas
+# ~ Win + C: haz que aparezca Cortana
+# ~ Win + Ctrl + D: Crear escritorio virtual
+# ~ Win + Ctrl + F4: Cerrar escritorio virtual activo
+# ~ Win + Ctrl + Izquierda o Derecha: Navegar entre escritorios virtuales
+# ~ Win + I: Ejecuta la configuración del sistema
+# ~ https://www.genbeta.com/a-fondo/los-44-mejores-trucos-de-windows-10
+
+# LockMode.{2559a1f2-21d7-11d4-bdaf-00c04f60b9f0}
+# ~ https://norfipc.com/comandos/bloquear-proteger-carpetas.html
 
 # Reset Explorador de Windows: 'cmd /k taskkill /F /IM explorer.exe & timeout /nobreak 4 & start explorer.exe'
 # Ver Redes Guardadas: netsh wlan show profile
 # Ver Pass de Red Guardada: netsh wlan show profile name=NombreDeRed key=clear
-# Habilitar 'Modo Dios': 'GodMode.{ED7BA470-8E54-465E-825C-99712043E01C}'
 # ~ 'C:\Users\%username%\AppData\Roaming\Microsoft\Windows\Start Menu'
 # ~ 'C:\Users\%username%\AppData\Local\Microsoft\Windows\WinX'
+# ~ C:\Users\Eny\Documents\Ivan\GitHub\LevelUp
 
-debug = False
 CNA = '' # Código del Nivel Anterior.
+debug = False
+kill_lvl3 = False
+proc = 0
 s = '\n'
 
-if __name__ == '__main__':	
+if __name__ == '__main__':
 	
-	prueba_1()
-	prueba_2()
-	prueba_3()
-	prueba_4()
+	cmd('title LevelUP')
+	# ~ prueba_1()
+	# ~ prueba_2()
+	# ~ prueba_3()
+	# ~ prueba_4()
+	# ~ prueba_5()
 	
 	print(s)
 	explicacion(1)
 	explicacion(2)
 	explicacion(3)
 	explicacion(4)
+	explicacion(5)
 	
 
 
