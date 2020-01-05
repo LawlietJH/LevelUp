@@ -1,15 +1,18 @@
 
 # LevelUp: Script de Retos Simples.
-# Version: v1.1.2
+# Version: v1.1.3
 # Python 3
 # Windows 
 
+import pyminizip	# Instalar: python -m pip install pyminizip
 import zipfile
 import base64
 import random
 import string
 import sys
 import os
+
+version = 'v1.1.3'
 
 #=======================================================================
 #=======================================================================
@@ -67,8 +70,11 @@ def gen_code(c, v):
 #=======================================================================
 
 def create_zip(name_zip, name_txt):
-	with zipfile.ZipFile(name_zip, 'w') as f:
-		f.write(name_txt)
+	# ~ with zipfile.ZipFile(name_zip, 'w') as f:
+		# ~ f.write(name_txt)
+		# ~ #f.setpassword(CNA.encode())
+		# ~ f.close()
+	pyminizip.compress(name_txt, None, name_zip, CNA, 0)
 
 #=======================================================================
 
@@ -79,19 +85,17 @@ def print_text(code, nivel, extras=''):
 		print(s)
 		if nivel == 4:
 			print(extras)
+		# ~ print('\n\t Intentos: {}'.format(cont))
 		u_code = input('\n\t Código de Nivel {}: '.format(nivel))
-		if code == u_code: break
+		if code == u_code or (debug and u_code == 'ZióN'): break
 		else:
 			cont += 1
 			if cont >= 5:
 				print('\n\t Demasiados Intentos!')
-				print('\n\t Vuelve a Intentar...')
+				print('\n\t Vuelve a Intentar... Presiona una tecla para continuar.')
 				cmd('Pause > Nul & cls')
 				print(s)
-				explicacion(1)
-				explicacion(2)
-				explicacion(3)
-				explicacion(4)
+				explicacion(nivel)
 				sys.exit()
 		cmd('cls')
 		print('\n\t Código Usado: {}\t<-- ERROR!'.format(u_code))
@@ -137,6 +141,11 @@ def explicacion(nivel):
 	Pues este comando sirve para listar directorios y con la opcion
 	/R nos muestra las secuencias alternativas de datos del archivo.
 	
+	Es importante saber que si el nombre tiene espacios debe colocarse
+	entre comillas dobles de la siguiente forma:
+	
+		notepad "archivo 1.txt:nombre.txt"
+	
 	====================================================================
 	
 	'''
@@ -162,6 +171,8 @@ def explicacion(nivel):
 	y luego el comprimido al hacer la suma, ademas, es indispensable
 	que la salida sea una imagen para que podamos esconder el
 	comprimido.
+	
+	La contraseña del zip siempre será el código del Nivel 1.
 	
 	====================================================================
 	
@@ -241,7 +252,7 @@ def explicacion(nivel):
 #=======================================================================
 
 is_list  = lambda var: type(var).__name__ == 'list'
-cmd2 = lambda comando: os.system(comando).read()
+cmd2 = lambda comando: os.popen(comando).read()
 cmd  = lambda comando: os.system(comando)
 del_file = lambda name: os.remove(name)
 
@@ -249,11 +260,9 @@ del_file = lambda name: os.remove(name)
 #=======================================================================
 #=======================================================================
 
-s = '\n'
-
 def prueba_1():
 	
-	global s
+	global s, CNA
 	
 	# Prueba 1 - Esteganografia:
 	#	En cmd
@@ -273,7 +282,7 @@ def prueba_1():
 		f.close()
 	
 	u_code = print_text(code=h_code, nivel=1)
-		
+	
 	cmd('cls')
 	print('\n\t Nivel 1. Código Usado: {}\t<-- CORRECTO!'.format(u_code))
 	print('\n\t Excelente!')
@@ -285,6 +294,7 @@ def prueba_1():
 	cmd('Pause > Nul && cls')
 	
 	s += '\n\t Nivel 1. Código Usado: {}'.format(u_code)
+	CNA = u_code
 
 
 def prueba_2():
@@ -292,7 +302,7 @@ def prueba_2():
 	# Prueba 2 - Esteganografia:
 	# Renombrar a .zip
 	
-	global s
+	global s, CNA
 	
 	# ~ if os.path.exists('prueba 1.txt'): del_file('prueba 1.txt')
 	
@@ -332,11 +342,12 @@ def prueba_2():
 	cmd('Pause > Nul && cls')
 	
 	s += '\n\t Nivel 2. Código Usado: {}'.format(u_code)
+	CNA = u_code
 
 
 def prueba_3():
 	
-	global s
+	global s, CNA
 	
 	h_code = gen_code(4, 2)
 	
@@ -360,11 +371,12 @@ def prueba_3():
 	cmd('Pause > Nul && cls')
 	
 	s += '\n\t Nivel 3. Código Usado: {}'.format(u_code)
+	CNA = u_code
 
 
 def prueba_4():
 	
-	global s
+	global s, CNA
 	
 	h_code = 'ED7BA470-8E54-465E-825C-99712043E01C'
 	
@@ -384,7 +396,7 @@ def prueba_4():
 	cmd('Pause > Nul && cls')
 	
 	s += '\n\t Nivel 4. Código Usado: {}'.format(u_code)
-
+	CNA = u_code
 
 
 
@@ -398,6 +410,10 @@ def prueba_4():
 # Habilitar 'Modo Dios': 'GodMode.{ED7BA470-8E54-465E-825C-99712043E01C}'
 # ~ 'C:\Users\%username%\AppData\Roaming\Microsoft\Windows\Start Menu'
 # ~ 'C:\Users\%username%\AppData\Local\Microsoft\Windows\WinX'
+
+debug = False
+CNA = '' # Código del Nivel Anterior.
+s = '\n'
 
 if __name__ == '__main__':	
 	
